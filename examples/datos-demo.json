@@ -1,0 +1,11 @@
+{
+  "proyecto": "Demostración Hefesto",
+  "ambiente": "prueba",
+  "items": [
+    {
+      "nombre": "Recurso ficticio",
+      "activo": true
+    }
+  ],
+  "sin_datos_reales": true
+}

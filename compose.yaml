@@ -1,0 +1,25 @@
+name: hefesto-utilidades
+services:
+  app:
+    image: sharevb/it-tools:2026.9.27@sha256:a49111cc027bbd04110beb2a3baf5ebc84e07f1f97589919efba619798215e6c
+    restart: unless-stopped
+    environment:
+      BASE_URL: /
+      PORT: "8080"
+    expose: ["8080"]
+    networks: [backend]
+    security_opt: [no-new-privileges:true]
+  gateway:
+    image: caddy:2-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f
+    restart: unless-stopped
+    entrypoint: [sh, /opt/hefesto/start.sh]
+    depends_on: [app]
+    environment:
+      BASIC_AUTH_USER: ${BASIC_AUTH_USER:?Configurar usuario}
+      BASIC_AUTH_HASH: ${BASIC_AUTH_HASH:?Configurar bcrypt}
+    expose: ["8080"]
+    networks: [default, backend]
+    volumes: [./ops:/opt/hefesto:ro]
+networks:
+  backend:
+    internal: true
