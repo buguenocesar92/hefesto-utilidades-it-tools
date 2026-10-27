@@ -1,3 +1,6 @@
 .env
 backups/
+logs/
 __pycache__/
+*.agekey
+*.tar.gz.age

@@ -9,17 +9,48 @@ services:
     expose: ["8080"]
     networks: [backend]
     security_opt: [no-new-privileges:true]
+    # IT Tools sirve la UI por nginx: busybox (base Alpine) trae wget.
+    # PENDIENTE de verificacion en runtime: el binario existe en la imagen.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
   gateway:
     image: caddy:2-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f
     restart: unless-stopped
     entrypoint: [sh, /opt/hefesto/start.sh]
-    depends_on: [app]
+    depends_on:
+      app:
+        condition: service_healthy
     environment:
       BASIC_AUTH_USER: ${BASIC_AUTH_USER:?Configurar usuario}
       BASIC_AUTH_HASH: ${BASIC_AUTH_HASH:?Configurar bcrypt}
     expose: ["8080"]
     networks: [default, backend]
     volumes: [./ops:/opt/hefesto:ro]
+    security_opt: [no-new-privileges:true]
+    # El gateway comprueba que alcanza el upstream por la red interna.
+    # No se anadio una ruta /healthz al Caddyfile: el binario de caddy no esta
+    # disponible en el servidor para validar la sintaxis (no se permiten
+    # contenedores) y una ruta mal escrita dejaria el gateway sin arrancar.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://app:8080/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 networks:
   backend:
     internal: true
